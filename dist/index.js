@@ -9995,8 +9995,9 @@ async function run() {
   let branchesAndPRStrings = []
   let baseBranch = null
   let baseBranchSHA = null
-  for (const pull of pulls) {
-    const branch = pull['head']['ref']
+  for (const [index, pull] of pulls.entries()) {
+    const branch = index == 0 ? 'refs/head/main' : pull['head']['ref']
+    // const branch = pull['head']['ref']
     core.info('Pull for branch: ' + branch)
 
     // Check branch with branch_regex
@@ -10059,7 +10060,19 @@ async function run() {
   } catch (error) {
     // If the branch already exists, we'll try to merge into it
     if (error.status == 422) {
-      core.warning('Branch already exists - will try to merge into it')
+      core.info('branch already exists, force pushing new version')
+      try {
+        await octokit.rest.git.updateRef({
+          owner: github.context.repo.owner,
+          repo: github.context.repo.repo,
+          ref: 'heads/' + combineBranchName,
+          sha: baseBranchSHA,
+          force: true
+        })
+      } catch (error) {
+        core.info('unable to force push new version')
+        core.info(error)
+      }
     } else {
       // Otherwise, fail the Action
       core.error(error)
