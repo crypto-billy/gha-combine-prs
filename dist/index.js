@@ -9997,7 +9997,6 @@ async function run() {
   let baseBranchSHA = null
   for (const [index, pull] of pulls.entries()) {
     const branch = index == 0 ? 'refs/head/main' : pull['head']['ref']
-    // const branch = pull['head']['ref']
     core.info('Pull for branch: ' + branch)
 
     // Check branch with branch_regex
@@ -10072,6 +10071,7 @@ async function run() {
       } catch (error) {
         core.info('unable to force push new version')
         core.info(error)
+        core.setFailed('Failed to create combined branch')
       }
     } else {
       // Otherwise, fail the Action
